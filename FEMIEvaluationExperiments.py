@@ -1,6 +1,7 @@
 #A File Containing the Experiments to Evaluate the FEMI-Index
 
-from Benchmark import benchmark,initializeDevice
+import BenchmarkFW
+from BenchmarkFW.Benchmark import benchmark,initializeDevice
 from FEMIDataIndex import computeFEMIIndex
 import numpy as np
 import json
@@ -9,15 +10,15 @@ def SinesExperiment():
 
     FEMI = {}
 
-    from Trainers.BatchedTrainer import Trainer as BatchedTrainer
-    from Models.FeedForward import Model as FeedForwardAE
-    from DataGenerators.Sines import generateData as Sines
+    from BenchmarkFW.Trainers.BatchedTrainer import Trainer as BatchedTrainer
+    from BenchmarkFW.Models.FeedForward import Model as FeedForwardAE
+    from BenchmarkFW.DataGenerators.Sines import generateData as Sines
     
     Dimensions=2
 
     device = initializeDevice()
     
-    path = "FEMISineExperiment/"
+    path = "Results/FEMISineExperiment/"
 
     for AnomalyAmplitude in np.linspace(1,2,11):
         trainingSet,validationSet,testSet = Sines(Dimensions,
@@ -45,25 +46,25 @@ def SinesExperiment():
         FEMI[AnomalyAmplitude] ={"E":E,"MI":MI,"E_Polar":E_polar,"MI_Polar":MI_polar}
 
     
-        with open("Results/"+path+"FEMIIndices.json","w") as f:
+        with open(path+"FEMIIndices.json","w") as f:
             json.dump(FEMI,f,default=str,indent=4)
 
 def UCRExperiment():
 
     FEMI = {}
 
-    from Trainers.BatchedTrainer import Trainer as BatchedTrainer
-    from Models.FeedForward import Model as FeedForwardAE
-    from Models.CNN_AE import Model as CNNAE
+    from BenchmarkFW.Trainers.BatchedTrainer import Trainer as BatchedTrainer
+    from BenchmarkFW.Models.FeedForward import Model as FeedForwardAE
+    from BenchmarkFW.Models.CNN_AE import Model as CNNAE
 
-    from SetWrappers.UCRArchive import loadData as DataSet
-    from SetWrappers.UCRArchive import getDatasetsInArchive
+    from BenchmarkFW.SetWrappers.UCRArchive import loadData as DataSet
+    from BenchmarkFW.SetWrappers.UCRArchive import getDatasetsInArchive
     
     Dimensions=1
 
     device = initializeDevice()
     
-    path = "FEMIUCRExperiment/"
+    path = "Results/FEMIUCRExperiment/"
 
     dataSets = getDatasetsInArchive()
     
@@ -98,10 +99,10 @@ def UCRExperiment():
         FEMI[dsName] ={"E":E,"MI":MI,"E_Polar":E_polar,"MI_Polar":MI_polar}
 
     
-        with open("Results/"+path+"FEMIIndices.json","w") as f:
+        with open(path+"FEMIIndices.json","w") as f:
             json.dump(FEMI,f,default=str,indent=4)
 
-#UCRExperiment()
+UCRExperiment()
 #######################################################
 #           Code for Plotting the Experiment          #
 #######################################################
