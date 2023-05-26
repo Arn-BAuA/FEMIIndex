@@ -1,6 +1,7 @@
 #!/bin/python
 
 import datetime
+import traceback
 
 from BenchmarkFW.Models.FeedForward import Model as FeedForwardAE
 from BenchmarkFW.Models.RecurrendAE import Model as LSTMAE
@@ -57,9 +58,9 @@ def getData(Dimensions,DataSrcNumber):
     if DataSrcNumber == 0:
         return Sines(Dimensions)
     if DataSrcNumber == 1:
-        return Sines(Dimensions,AnomalousAmplitudes=[1.2,1.2])
+        return Sines(Dimensions,AnomalousAmplitudes=[[1.2],[1.2]])
     if DataSrcNumber == 2:
-        return Sines(Dimensions,AnomalousFrequency=[1,1.2])
+        return Sines(Dimensions,AnomalousFrequency=[[1],[1.2]])
     if DataSrcNumber == 3:
         return Sines(Dimensions,NoiseLevel = 0.1)
     
@@ -76,7 +77,7 @@ def getData(Dimensions,DataSrcNumber):
 
 numModels = 15
 
-def getModel(Dimensions,ModelNumber,sampleDataSet):
+def getModel(Dimensions,ModelNumber,trainingSet):
     if ModelNumber == 0: 
         return FeedForwardAE(Dimensions,device,InputSize = trainingSet.Length(),sliceLength=0.2,LatentSpaceSize=0.1,NumLayersPerPart=4)
     if ModelNumber == 1: 
@@ -114,12 +115,13 @@ def getModel(Dimensions,ModelNumber,sampleDataSet):
 
 masterPath = "HugeBenchmarkResults/"
 
+
 #NBatches will not be transmitted at the moment...
 def BenchmarkRun(Dimensions,DataSrcNumber,ModelNumber,nBatches=10):
     
     identifier = "Dimensions "+str(Dimensions)+" DataSrcNumber "+str(DataSrcNumber)+" ModelNumber "+str(ModelNumber)+"nBatches "+str(nBatches) 
     
-    statusFile = open("Status.log","a")
+    statusFile = open(masterPath+"Status.log","a")
     statusFile.write("["+str(datetime.datetime.now())+"] Started " + identifier +'\n')
     statusFile.close()
 
@@ -135,17 +137,21 @@ def BenchmarkRun(Dimensions,DataSrcNumber,ModelNumber,nBatches=10):
                   testSet,
                   model,
                   trainer,
-                  n_epochs=100,
+                  n_epochs=40,
                   pathToSave=pathToSave,
                   device = device)
 
-    except e:
-        errorFile = open(masterPath+Errors.log,'a')
+    except Exception as e:
+        print("Oh. An Error Occured             WHAT IS HAPPPENIIIIING")
+        errorFile = open(masterPath+"Errors.log",'a')
+        errorFile.write("\n \n \n")
         errorFile.write("["+str(datetime.datetime.now())+"] " + identifier +'\n')
-        errorFile.write(e)
+        tb=traceback.format_exc()
+        errorFile.write(tb)
+        errorFile.write(str(e))
         errorFile.close()
 
-    statusFile = open("Status.log","a")
+    statusFile = open(masterPath+"Status.log","a")
     statusFile.write("["+str(datetime.datetime.now())+"] Ended " + identifier +'\n')
     statusFile.close()
 
@@ -156,7 +162,7 @@ models = np.arange(0,numModels)
 dataSrcs = np.arange(0,numDataSrcs)
 
 absolvedRuns = 0.0
-startTime = datatime.datetime.now()
+startTime = datetime.datetime.now()
 totalRuns = float(len(dimensions)*len(models)*len(dataSrcs))
 
 for d in dimensions:
