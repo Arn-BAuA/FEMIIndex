@@ -21,8 +21,6 @@ from BenchmarkFW.Evaluation.QuickOverview import plotOverview
 
 device = initializeDevice()
 
-numDataSources = 3
-
 selectedUCRSets = [
             "ACSF1",
             "AllGestureWiimoteX",
@@ -117,9 +115,9 @@ masterPath = "HugeBenchmarkResults/"
 
 
 #NBatches will not be transmitted at the moment...
-def BenchmarkRun(Dimensions,DataSrcNumber,ModelNumber,nBatches=10):
+def BenchmarkRun(Dimensions,DataSrcNumber,ModelNumber,nBatches=10,interactive = False):
     
-    identifier = "Dimensions "+str(Dimensions)+" DataSrcNumber "+str(DataSrcNumber)+" ModelNumber "+str(ModelNumber)+"nBatches "+str(nBatches) 
+    identifier = "Dimensions "+str(Dimensions)+" DataSrcNumber "+str(DataSrcNumber)+" ModelNumber "+str(ModelNumber)+" nBatches "+str(nBatches) 
     
     statusFile = open(masterPath+"Status.log","a")
     statusFile.write("["+str(datetime.datetime.now())+"] Started " + identifier +'\n')
@@ -151,26 +149,48 @@ def BenchmarkRun(Dimensions,DataSrcNumber,ModelNumber,nBatches=10):
         errorFile.write(str(e))
         errorFile.close()
 
+        if interactive:
+            print(tb)
+            print(e)
+
     statusFile = open(masterPath+"Status.log","a")
     statusFile.write("["+str(datetime.datetime.now())+"] Ended " + identifier +'\n')
     statusFile.close()
 
 import numpy as np
 
-dimensions = [1,2,4,8,16,32]
-models = np.arange(0,numModels)
-dataSrcs = np.arange(0,numDataSrcs)
+def fullBenchmark(dimensions =  [1,2,4,8,16,32]):
 
-absolvedRuns = 0.0
-startTime = datetime.datetime.now()
-totalRuns = float(len(dimensions)*len(models)*len(dataSrcs))
+    models = np.arange(0,numModels)
+    dataSrcs = np.arange(0,numDataSrcs)
 
-for d in dimensions:
-    for m in models:
+    absolvedRuns = 0.0
+    startTime = datetime.datetime.now()
+    totalRuns = float(len(dimensions)*len(models)*len(dataSrcs))
+
+    for d in dimensions:
         for s in dataSrcs:
-            BenchmarkRun(d,s,m,nBatches=10)
-            absolvedRuns +=1
-            estimatedTime = startTime + ((datetime.datetime.now()-startTime)*(totalRuns/absolvedRuns))
-            print("Estimated Date of termination : ",estimatedTime)
+            for m in models:
+                BenchmarkRun(d,s,m,nBatches=10)
+                absolvedRuns +=1
+                estimatedTime = startTime + ((datetime.datetime.now()-startTime)*(totalRuns/absolvedRuns))
+                print("Estimated Date of termination : ",estimatedTime)
 
+import sys
+if len(sys.argv) == 1:
+    fullBenchmark()
+else:
+    dimensions = [0]*(len(sys.argv)-1)
+    for i in range(1,len(sys.argv)):
+        dimensions[i-1] = int(sys.argv[i])
 
+    print("Testing for dimensions: ",dimensions)
+    fullBenchmark(dimensions)
+
+#import sys
+
+#numDimensions = int(sys.argv[1])
+#dataSourceNumber = int(sys.argv[2])
+#modelNumber = int(sys.argv[3])
+
+#BenchmarkRun(numDimensions,dataSourceNumber,modelNumber,nBatches=10,interactive = True)
