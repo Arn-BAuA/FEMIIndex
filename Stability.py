@@ -8,9 +8,6 @@ from BenchmarkFW.Factorys.DataSource import getStandardDataSource as DataSource
 from BenchmarkFW.DataModifyers.smooth import rollingAverage
 from FEMIDataIndex import computeFEMIIndex
 
-import matplotlib.pyplot as plt
-
-
 
 #The goal of this experiment is to reason, how stable the FEMI-INdex is. To asses this, we simulate a case, where we randomly
 # sample form the same data source. How much does the FEMI-Index change?
@@ -97,24 +94,9 @@ class StabilityExperiment(Experiment):
             with open(self.resultPath+"DatasetNr."+str(dsIndex)+".json",'w') as f:
                 json.dump(DataSetHP,f,default = str,indent=4)
 
-    #As Arguments, the name of the files to be plotted are expected.
-    #There are always two files per measurement. one csv and one json. Both are loaded, if one of them is provided.
     def _plot(self,args):
-        
-        types = ["Component","Polar"]    
-        quantitys = ["E","MI"]
-
-            for t in types:
-                
-                for quantity in quantitys:
-                    fig,ax = plt.subplots() 
-        
-                    for path in args:
-            
-                        path = path.split('.')[0] #Remove Postfix
-                        data = pd.read_csv(path+".csv",sep = '\t')
-
-                        ax.errorbar(data[],data[])
+        #Code to plot experimental Results goes here.
+        pass
 
 import sys
 

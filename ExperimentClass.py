@@ -7,7 +7,7 @@
 
 import os
 
-mainResultDir = "../Results/" #../, since the instances of the Experiment are stored in a subfolder of the repo.
+mainResultDir = "Results/" #../, since the instances of the Experiment are stored in a subfolder of the repo.
 
 class Experiment():
 
@@ -15,8 +15,9 @@ class Experiment():
         
         self.resultPath = mainResultDir + resultPath
         
-        if not os.path.isdir(resultPath):
-            os.mkdir(resultPath)
+        if not os.path.isdir(self.resultPath):
+            print("Create Dir ",self.resultPath)
+            os.mkdir(self.resultPath)
         
         if len(args) > 1:
             if args[1] == "--plot":
