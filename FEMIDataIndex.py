@@ -66,7 +66,7 @@ def computeFFT(DataSet,returnPolarRepresentation=True):
 
     return fftValues
 
-from Utility.klo.code.python.mikl import entkl as entropy
+from BenchmarkFW.Utility.klo.code.python.mikl import entkl as entropy
 
 #Normal an anomal data are datablocks
 def computeFEMIIndex(normalData,anomalData,polarFEMIIndex = True,noiseRegularisationMagnitude = 1e-5):
