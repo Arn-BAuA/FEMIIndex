@@ -69,7 +69,7 @@ class NoiseExperiment(Experiment):
                                             "Noise Analysis",
                                             "Noise Analysis",
                                             args=args,
-                                            colorMap=plt.cm.ciridis,
+                                            colorMap=plt.cm.cividis,
                                             autosave=True,
                                             showFig=False) 
 
