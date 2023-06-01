@@ -10,8 +10,6 @@ from FEMIDataIndex import computeFEMIIndex
 
 import matplotlib.pyplot as plt
 
-
-
 #The goal of this experiment is to reason, how stable the FEMI-INdex is. To asses this, we simulate a case, where we randomly
 # sample form the same data source. How much does the FEMI-Index change?
 # in Addition, we average the values in the dataset to remove higher freqeuncies from the set. We look at how this changes styability.
@@ -99,22 +97,15 @@ class StabilityExperiment(Experiment):
 
     #As Arguments, the name of the files to be plotted are expected.
     #There are always two files per measurement. one csv and one json. Both are loaded, if one of them is provided.
-    def _plot(self,args):
-        
-        types = ["Component","Polar"]    
-        quantitys = ["E","MI"]
-
-            for t in types:
-                
-                for quantity in quantitys:
-                    fig,ax = plt.subplots() 
-        
-                    for path in args:
-            
-                        path = path.split('.')[0] #Remove Postfix
-                        data = pd.read_csv(path+".csv",sep = '\t')
-
-                        ax.errorbar(data[],data[])
+    def _plot(self,args,autosave = True,showFig = False):
+        self._fullPlotAgainstVariedQuantity("Window Length",
+                                            "Window Len. in Seq. Len.",
+                                            "Stability Analysis",
+                                            "Stability Analysis",
+                                            args=args,
+                                            colorMap=plt.cm.viridis,
+                                            autosave=True,
+                                            showFig=False) 
 
 import sys
 
