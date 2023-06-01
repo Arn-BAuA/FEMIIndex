@@ -95,6 +95,7 @@ for i,index in enumerate(commons):
                     "MI_Polar":float(line[6]),
                     "Delta_MI_Polar":float(line[7]),
                     "AUC":benchmarkResults.loc[benchmarkResults["#Epoch"] == epoch]["AUC Score on Validation Set"],
+                    "AUC_Error":benchmarkResults.loc[benchmarkResults["#Epoch"] == epoch]["AUC Score on Validation Set Delta"],
                     "Benchmark_Data":benchmarkResults,
                     "Metadata":metaData,
                     }
@@ -147,3 +148,34 @@ for t in types:
     plt.close()
 
     #Plot The 1D Stuff
+
+    for q in Quantities:
+        
+        fig,ax = plt.subplots()
+
+        for i,src in enumerate(dataSets):
+
+            ax.errorbar(
+                    [dataSets[src][q+"_"+t]],
+                    [dataSets[src]["AUC"]],
+                    xerr=[dataSets[src]["Delta_"+q+"_"+t]],
+                    yerr=[dataSets[src]["AUC_Error"]],
+                    linestyle="None",
+                    marker = markers[i%len(markers)],
+                    markersize = 12,
+                    label = src,
+                    )
+            ax.set_title(t" "+legendMapping[q]+" VS AUC for "+ModelName)
+            ax.set_xlabel(legendMapping[q])
+            ax.set_ylabel("AUC")
+            ax.legend()
+
+            fig.set_figwidth(15)
+            fig.set_figheight(10)
+            
+            plt.savefig(plotDir+t+" "+legendMapping[q]+" VS AUC for "+ModelName+".pdf")
+            plt.close()
+
+
+
+
