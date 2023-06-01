@@ -17,13 +17,13 @@ import matplotlib.pyplot as plt
 class StabilityExperiment(Experiment):
 
     def __init__(self,args):
-        Experiment.__init__(self,"NoiseExperiment/",args)
+        Experiment.__init__(self,"StabilityExperiment/",args)
 
     def _conduct(self,args):
         
         percentualWindowLengths = np.array([0.01,0.02,0.04,0.08,0.1,0.25,0.5,0.75])
         nSamples = 10
-        nDatasets = 32 #From the dataset Factory
+        nDatasets = 22 #From the dataset Factory
         
 
         for dsIndex in range(0,nDatasets):

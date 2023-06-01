@@ -9,11 +9,16 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 import pandas as pd
+import numpy as np
 import json
 
+from BenchmarkFW.Factorys.DataSource import getStandardDataSource as DataSource
+from BenchmarkFW.DataModifyers.smooth import rollingAverage
+from FEMIDataIndex import computeFEMIIndex
 
-mainResultDir = "Results/" 
+mainResultDir = "TestResults/" 
 mainPlotDir = "Plots/"
+baselineDir = "TestResults/BaseLine"
 
 class Experiment():
 
@@ -50,6 +55,94 @@ class Experiment():
     #################################
     # Some Experiment Utility Methods to use in the subclasses
     ##
+    
+    ##############
+    #set dispnser should be a function that just outputs a fresh dataset. It has to be defined locally before the method call
+    #see the load baseline method...
+    #
+    def claculateIndex(self,nSamples,setDispenser):
+        
+        C_E = np.zeros(nSamples)
+        C_MI = np.zeros(nSamples)
+        P_E = np.zeros(nSamples)
+        P_MI = np.zeros(nSamples)
+        
+        for i in range(0,nSamples):
+            trainingSet,validationSet = setDispenser()
+            C_E[i],C_MI[i] = computeFEMIIndex(trainingSet,validationSet,polarFEMIIndex = False)
+            P_E[i],P_MI[i] = computeFEMIIndex(trainingSet,validationSet,polarFEMIIndex = True)
+
+        return [np.mean(C_E),np.std(C_E),np.mean(C_MI),np.std(C_MI),np.mean(P_E),np.std(P_E),np.mean(P_MI),np.std(P_MI)]
+
+    #######
+    # aletredSetDispenser is a method that returns a setdispenser for altrerd datasets. See stability experiment code. 
+    def recordSeries(self,
+                     nSamples,
+                     alteredSetDispenser,
+                     parameters,
+                     parameterName,
+                     pathToSave,
+                     hyperparamters,
+                     includeBaseline=False,
+                     baseLineDSIndex):
+        lines = []
+        
+        if includeBaseline:
+            firstLine = self.loadBaseline(baseLineDSIndex)
+            firstLine = [parameters[0]]+firstLine
+            parameters = parameters[1:]
+            lines.append(firstLine)
+        
+        for parameter in parameters:
+            line = self.claculateIndex(nSamples,alteredSetDispenser(parameter))
+            lines.append([parameter]+line)
+
+        lines = np.array(lines) # For the indexing...
+
+        df = pd.DataFrame({
+                    parameterName:lines[0,:],
+                    "E_Component":lines[1,:],
+                    "Delta_E_Component":lines[2,:],
+                    "MI_Component":lines[3,:],
+                    "Delta_MI_Component":lines[4,:],
+                    "E_Polar":lines[5,:],
+                    "Delta_E_Polar":lines[6,:],
+                    "MI_Polar":lines[7,:],
+                    "Delta_MI_Polar":lines[8,:],
+                })
+        df.to_csv(self.resultPath+pathToSave+".csv",sep='\t')
+        with open(self.resultPath+pathToSave+".json",'w') as f:
+            json.dump(hyperparameters,f,default = str, indent = 4)
+
+
+    def loadBaseline(self,dataSetIndex):
+        baselineFileName = "DataSet_"+str(dataSetIndex)+".line"
+
+        if not os.path.exists(baselinePath+baselineFileName):
+            print("Baseline for ",dataSetIndex,"not found. Record a new one.")
+            
+            def setDispenser():
+                trainingSet,validationSet,testSet = DataSource(1,dataSetIndex,TrainingSetSize = 100,ValidationSetSize=100,TestSetSize = 0)
+                return trainingSet,validationSet
+            
+            line = self.claculateIndex(10,setDispenser):
+            
+            f = open(baselinePath+baselineFileName,'w')
+            for number in line:
+                f.write(str(number)+',')
+            f.close()
+            return line
+        else:
+            f = open(baselinePath+baselineFileName,'r')
+            content = f.readlines()
+            f.close()
+
+            split = content.split(',')
+            line = [0]*(len(split)-1)
+
+            for i,number in enumerate(split[:-1]):
+                line[i] = float(number)
+            return line
 
     #################################
     # Some Plot Utility Methods to use in the subclasses
