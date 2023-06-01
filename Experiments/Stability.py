@@ -21,79 +21,47 @@ class StabilityExperiment(Experiment):
 
     def _conduct(self,args):
         
-        percentualWindowLengths = np.array([0.01,0.02,0.04,0.08,0.1,0.25,0.5,0.75])
+        percentualWindowLengths = np.array([0,0.01,0.02,0.04,0.08,0.1,0.25,0.5,0.75])
         nSamples = 10
         nDatasets = 22 #From the dataset Factory
         
+        
 
         for dsIndex in range(0,nDatasets):
-            
+
             print("Calculating for ds ",dsIndex)
-
-            EComponent = np.zeros([len(percentualWindowLengths)+1,nSamples])
-            MIComponent = np.zeros([len(percentualWindowLengths)+1,nSamples])
-            EPolar = np.zeros([len(percentualWindowLengths)+1,nSamples])
-            MIPolar = np.zeros([len(percentualWindowLengths)+1,nSamples])
             
-            #################################
-            #   Calculation of individual E and MI
-            #
-            
+            #There has to be a better way...
+            trainingSet,validationSet,testSet = DataSource(1,dsIndex,TrainingSetSize = 1,ValidationSetSize=0,TestSetSize=0)#Just for the HPs
+            DataSetHP = {"DataSetName":trainingSet.Name(),"HyperParameters":trainingSet.hyperParameters()}
 
-            for ds in range(0,nSamples):
+            def alteredSetDispenser(percentualWindowLength):
                 
-                print("Sample ",ds)
+                windowLength = int(percentualWindowLength*trainingSet.Length())
                 
-                trainingSet,validationSet,testSet = DataSource(1,dsIndex,TrainingSetSize = 100,ValidationSetSize=100,TestSetSize=0)
-
-                avgWindowLengths = (percentualWindowLengths*trainingSet.Length()).astype(int)
-                for avgI in range(0,len(avgWindowLengths)):
+                def setDispenser():
+                    print("Dispensed Set for Win. Len. ",windowLength)
+                    trainingSet,validationSet,testSet = DataSource(1,dsIndex,TrainingSetSize = 100,ValidationSetSize=100,TestSetSize=0)
                     
-                    windowed_trainingSet = rollingAverage(avgWindowLengths[avgI],trainingSet)
-                    windowed_validationSet = rollingAverage(avgWindowLengths[avgI],validationSet) 
-                   
+                    windowed_trainingSet = rollingAverage(windowLength,trainingSet)
+                    windowed_validationSet = rollingAverage(windowLength,validationSet) 
 
-                    EComponent[avgI+1][ds],MIComponent[avgI+1][ds] = computeFEMIIndex(windowed_trainingSet,windowed_validationSet,polarFEMIIndex = False)
-                    EPolar[avgI+1][ds],MIPolar[avgI+1][ds] = computeFEMIIndex(windowed_trainingSet,windowed_validationSet,polarFEMIIndex = True)
-
+                    return windowed_trainingSet,windowed_validationSet
                 
-                EComponent[0][ds],MIComponent[0][ds] = computeFEMIIndex(trainingSet,validationSet,polarFEMIIndex = False)
-                EPolar[0][ds],MIPolar[0][ds] = computeFEMIIndex(trainingSet,validationSet,polarFEMIIndex = True)
-            
-            ######################################
-            #   Mean and STD as Value and Error
-            #
+                return setDispenser
 
-            EComponentMean = np.mean(EComponent,axis = 1)
-            EComponentStd = np.std(EComponent,axis = 1)
-            MIComponentMean = np.mean(MIComponent,axis = 1)
-            MIComponentStd = np.std(MIComponent,axis = 1)
-            
-            EPolarMean = np.mean(EPolar,axis = 1)
-            EPolarStd = np.std(EPolar,axis = 1)
-            MIPolarMean = np.mean(MIPolar,axis = 1)
-            MIPolarStd = np.std(MIPolar,axis = 1)
-            
-            windowLenghths = np.concatenate([[0],percentualWindowLengths])
+            self.recordSeries(
+                                nSamples,
+                                alteredSetDispenser,
+                                parameters = percentualWindowLengths,
+                                parameterName = "Window Length",
+                                pathToSave = "DatasetNr."+str(dsIndex),
+                                hyperparameters = DataSetHP,
+                                includeBaseline = True,
+                                baseLineDSIndex = dsIndex
+                                )
 
-            df = pd.DataFrame({     
-                    "Window Length":windowLenghths,
-                    "E_Component":EComponentMean,
-                    "Delta_E_Component":EComponentStd,
-                    "MI_Component":MIComponentMean,
-                    "Delta_MI_Component":MIComponentStd, 
-                    "E_Polar":EPolarMean,
-                    "Delta_E_Polar":EPolarStd,
-                    "MI_Polar":MIPolarMean,
-                    "Delta_MI_Polar":MIPolarStd,
-                })
-            df.to_csv(self.resultPath+"DatasetNr."+str(dsIndex)+".csv",sep="\t") 
-            
-            DataSetHP = trainingSet.hyperParameters()
-            DataSetHP = {"DataSetName":trainingSet.Name(),"HyperParameters":DataSetHP}
 
-            with open(self.resultPath+"DatasetNr."+str(dsIndex)+".json",'w') as f:
-                json.dump(DataSetHP,f,default = str,indent=4)
 
     #As Arguments, the name of the files to be plotted are expected.
     #There are always two files per measurement. one csv and one json. Both are loaded, if one of them is provided.

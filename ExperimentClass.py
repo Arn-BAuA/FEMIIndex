@@ -17,8 +17,8 @@ from BenchmarkFW.DataModifyers.smooth import rollingAverage
 from FEMIDataIndex import computeFEMIIndex
 
 mainResultDir = "TestResults/" 
-mainPlotDir = "Plots/"
-baselineDir = "TestResults/BaseLine"
+mainPlotDir = "TestPlots/"
+baselineDir = "TestResults/BaseLine/"
 
 class Experiment():
 
@@ -82,9 +82,9 @@ class Experiment():
                      parameters,
                      parameterName,
                      pathToSave,
-                     hyperparamters,
+                     hyperparameters,
                      includeBaseline=False,
-                     baseLineDSIndex):
+                     baseLineDSIndex = 0):
         lines = []
         
         if includeBaseline:
@@ -100,15 +100,15 @@ class Experiment():
         lines = np.array(lines) # For the indexing...
 
         df = pd.DataFrame({
-                    parameterName:lines[0,:],
-                    "E_Component":lines[1,:],
-                    "Delta_E_Component":lines[2,:],
-                    "MI_Component":lines[3,:],
-                    "Delta_MI_Component":lines[4,:],
-                    "E_Polar":lines[5,:],
-                    "Delta_E_Polar":lines[6,:],
-                    "MI_Polar":lines[7,:],
-                    "Delta_MI_Polar":lines[8,:],
+                    parameterName:lines[:,0],
+                    "E_Component":lines[:,1],
+                    "Delta_E_Component":lines[:,2],
+                    "MI_Component":lines[:,3],
+                    "Delta_MI_Component":lines[:,4],
+                    "E_Polar":lines[:,5],
+                    "Delta_E_Polar":lines[:,6],
+                    "MI_Polar":lines[:,7],
+                    "Delta_MI_Polar":lines[:,8],
                 })
         df.to_csv(self.resultPath+pathToSave+".csv",sep='\t')
         with open(self.resultPath+pathToSave+".json",'w') as f:
@@ -118,23 +118,23 @@ class Experiment():
     def loadBaseline(self,dataSetIndex):
         baselineFileName = "DataSet_"+str(dataSetIndex)+".line"
 
-        if not os.path.exists(baselinePath+baselineFileName):
+        if not os.path.exists(baselineDir+baselineFileName):
             print("Baseline for ",dataSetIndex,"not found. Record a new one.")
             
             def setDispenser():
                 trainingSet,validationSet,testSet = DataSource(1,dataSetIndex,TrainingSetSize = 100,ValidationSetSize=100,TestSetSize = 0)
                 return trainingSet,validationSet
             
-            line = self.claculateIndex(10,setDispenser):
+            line = self.claculateIndex(10,setDispenser)
             
-            f = open(baselinePath+baselineFileName,'w')
+            f = open(baselineDir+baselineFileName,'w')
             for number in line:
                 f.write(str(number)+',')
             f.close()
             return line
         else:
-            f = open(baselinePath+baselineFileName,'r')
-            content = f.readlines()
+            f = open(baselineDir+baselineFileName,'r')
+            content = f.readlines()[0]
             f.close()
 
             split = content.split(',')

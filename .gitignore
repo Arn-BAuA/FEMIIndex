@@ -2,6 +2,9 @@ data
 __pychache__
 *.pdf
 Results
+TestResults
+Plots
+TestPlots
 *.swp
 HugeBenchmarkResults
 oldResults
