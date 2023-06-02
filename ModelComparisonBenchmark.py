@@ -18,61 +18,10 @@ from BenchmarkFW.Trainers.BatchedTrainer import Trainer as BatchedTrainer
 from BenchmarkFW.Benchmark import benchmark,initializeDevice
 from BenchmarkFW.Evaluation.QuickOverview import plotOverview
 
+from BenchmarkFW.Factorys.DataSource import getStandardDataSource as getData 
+
 
 device = initializeDevice()
-
-selectedUCRSets = [
-            "ACSF1",
-            "AllGestureWiimoteX",
-            "BME",
-            "Chinatown",
-            "Crop",
-            "DodgerLoopDay",
-            "EOGHorizontalSignal",
-            "EthanolLevel",
-            "FreezerRegularTrain",
-            "Fungi",
-            "GestureMidAirD3",
-            "GesturePebbleZ2",
-            "GunPoint",
-            "HouseTwenty",
-            "MixedShapesRegularTrain",
-            "PigAirwayPressure",
-            "PLAID",
-            "PowerCons",
-            "Rock",
-            "SemgHandGenderCh2",
-            "SemgHandMovementCh2",
-            "SemgHandSubjectCh2",
-            "SmoothSubspace",
-            "UMD",
-            "Wafer",
-    ]
-
-
-numDataSrcs = 32
-
-def getData(Dimensions,DataSrcNumber):
-    if DataSrcNumber == 0:
-        return Sines(Dimensions)
-    if DataSrcNumber == 1:
-        return Sines(Dimensions,AnomalousAmplitudes=[[1.2],[1.2]])
-    if DataSrcNumber == 2:
-        return Sines(Dimensions,AnomalousFrequency=[[1],[1.2]])
-    if DataSrcNumber == 3:
-        return Sines(Dimensions,NoiseLevel = 0.1)
-    
-
-    if DataSrcNumber == 4:
-        return ECGDataSet(Dimensions)
-
-    if DataSrcNumber == 5:
-        return SMDDataSet(Dimensions,nNormalDimensions=0)
-    if DataSrcNumber == 6:
-        return SMDDataSet(Dimensions,nNormalDimensions=int(Dimensions*0.5))
-    
-    return UCRDataSet(Dimensions,DataSet = selectedUCRSets[DataSrcNumber-1])
-
 numModels = 15
 
 def getModel(Dimensions,ModelNumber,trainingSet):
@@ -162,7 +111,7 @@ import numpy as np
 def fullBenchmark(dimensions =  [1,2,4,8,16,32]):
 
     models = np.arange(0,numModels)
-    dataSrcs = np.arange(0,numDataSrcs)
+    dataSrcs = np.arange(11,170)
 
     absolvedRuns = 0.0
     startTime = datetime.datetime.now()
