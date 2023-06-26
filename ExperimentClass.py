@@ -277,6 +277,9 @@ class Experiment():
                                        label = str(metaData[i]["DataSetName"])
                             )
                         )
+            
+            if len(dsLegendHandles) > 20:
+                dsLegendHandles = dsLegendHandles[:20]
 
             plt.legend(handles = dsLegendHandles,loc="lower left",bbox_to_anchor=(1,0))
            

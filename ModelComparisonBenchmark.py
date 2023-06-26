@@ -110,8 +110,9 @@ import numpy as np
 
 def fullBenchmark(dimensions =  [1,2,4,8,16,32]):
 
+    print("Testing for dimensions: ",dimensions)
     models = np.arange(0,numModels)
-    dataSrcs = np.arange(11,170)
+    dataSrcs = np.arange(0,170)
 
     absolvedRuns = 0.0
     startTime = datetime.datetime.now()
@@ -133,7 +134,6 @@ else:
     for i in range(1,len(sys.argv)):
         dimensions[i-1] = int(sys.argv[i])
 
-    print("Testing for dimensions: ",dimensions)
     fullBenchmark(dimensions)
 
 #import sys
