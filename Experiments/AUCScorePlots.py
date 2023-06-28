@@ -102,8 +102,9 @@ def plotFEMIandAUC(modelIndex,epoch):
         if not modelNameLoaded:
             ModelName =metaData["General Information"]["Used Model"]+" ("+str(modelIndex)+")"
             modelNameLoaded = True
-
-        dataSets[sourceName] ={
+        
+        dataDict = {
+                        dSourceCol:sourceName,
                         ECCol:float(line[0]),
                         dECCol:float(line[1]),
                         MICCol:float(line[2]),
@@ -112,24 +113,19 @@ def plotFEMIandAUC(modelIndex,epoch):
                         dEPCol:float(line[5]),
                         MIPCol:float(line[6]),
                         dMIPCol:float(line[7]),
-                        AUCCol:benchmarkResults.loc[benchmarkResults["#Epoch"] == epoch]["AUC Score on Validation Set"],
-                        dAUCCol:benchmarkResults.loc[benchmarkResults["#Epoch"] == epoch]["AUC Score on Validation Set Delta"],
-                        "Benchmark_Data":benchmarkResults,
-                        "Metadata":metaData,
+                        AUCCol:float(benchmarkResults.loc[benchmarkResults["#Epoch"] == epoch]["AUC Score on Validation Set"]),
+                        dAUCCol:float(benchmarkResults.loc[benchmarkResults["#Epoch"] == epoch]["AUC Score on Validation Set Delta"])
                         }
         
-                        DFtoSave[dSourceCol] = sourceName,
-                        DFtoSave[ECCol] = float(line[0]),
-                        DFtoSave[dECCol] = float(line[1]),
-                        DFtoSave[MICCol] = float(line[2]),
-                        DFtoSave[dMICCol] = float(line[3]),
-                        DFtoSave[EPCol] = float(line[4]),
-                        DFtoSave[dEPCol] = float(line[5]),
-                        DFtoSave[MIPCol] = float(line[6]),
-                        DFtoSave[dMIPCol] = float(line[7]),
-                        DFtoSave[AUCCol] = benchmarkResults.loc[benchmarkResults["#Epoch"] == epoch]["AUC Score on Validation Set"],
-                        DFtoSave[dAUCCol] = benchmarkResults.loc[benchmarkResults["#Epoch"] == epoch]["AUC Score on Validation Set Delta"],
+        print(dataDict)
 
+        DFtoSave = DFtoSave.append(dataDict,ignore_index = True)
+
+        dataDict["Benchmark_Data"] = benchmarkResults
+        dataDict["Metadata"] = metaData
+
+        dataSets[sourceName]= dataDict
+    
     DFtoSave.to_csv(dfExportPaths+"Model No "+str(modelIndex)+" epoch "+str(epoch)+".csv",sep='\t')
 
     types = ["Polar","Component"]
@@ -138,6 +134,9 @@ def plotFEMIandAUC(modelIndex,epoch):
 
     markers = [".","o","v","^","<",">","8","s","p","P","*","h","H","X","D","d",4,5,6,7,8,9,10,11]
 
+    if len(dataSets) < len(markers):
+        markers = ["."]
+        
     for t in types:
 
         #Plot Values 2D
@@ -167,12 +166,15 @@ def plotFEMIandAUC(modelIndex,epoch):
         ax.set_title(t+" FEMI Index for "+ModelName+"("+str(epoch)+" Epochs training)")
         ax.set_xlabel("Entropy")
         ax.set_ylabel("Mutual Information")
-        ax.legend()
+        ax.grid()
+        
+        if len(dataSets) < len(markers):
+            ax.legend()
 
         fig.colorbar(matplotlib.cm.ScalarMappable(cmap = colorMap),ax = ax,label="AUC Score")
-
-        fig.set_figwidth(15)
-        fig.set_figheight(10)
+        
+        fig.set_figwidth(10)
+        fig.set_figheight(3)
         
         plt.savefig(plotDir+t+" FEMI Index for "+ModelName+" "+str(epoch)+" Epochs.pdf")
         plt.close()
@@ -199,9 +201,10 @@ def plotFEMIandAUC(modelIndex,epoch):
             ax.set_xlabel(legendMapping[q])
             ax.set_ylabel("AUC")
             ax.legend()
+            ax.grid()
 
-            fig.set_figwidth(15)
-            fig.set_figheight(10)
+            fig.set_figwidth(8)
+            fig.set_figheight(3)
             
             plt.savefig(plotDir+t+" "+legendMapping[q]+" VS AUC for "+ModelName+" "+str(epoch)+" Epochs.pdf")
             plt.close()

@@ -1,5 +1,7 @@
 from ExperimentClass import Experiment
 
+import os
+
 import numpy as np
 import pandas as pd
 import json
@@ -23,11 +25,17 @@ class NoiseExperiment(Experiment):
         
         percentualNoiseLevels = np.array([0,0.01,0.02,0.04,0.08,0.1,0.25,0.5,0.75,2])
         nSamples = 10
-        nDatasets = 22 #From the dataset Factory
+        nDatasets = 173 #From the dataset Factory
         
         
 
         for dsIndex in range(0,nDatasets):
+            
+            savePath = "TestResults/NoiseExperiment/DatasetNr."+str(dsIndex)+".csv"
+            
+            if os.path.exists(savePath):
+                print("Skipping ",dsIndex)
+                continue;
 
             print("Calculating for ds ",dsIndex)
             
