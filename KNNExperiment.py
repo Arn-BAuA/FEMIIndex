@@ -235,6 +235,7 @@ def smallParameterEvaluation(modelID = 11,epoch = 40,
             print("Mean KNN Err: ",merr,"+/-",stderr)
             print("Mean Dist, p vs. r",dist,"+/-",disterr)
 
+
 import matplotlib.pyplot as plt
 import matplotlib
 
@@ -333,7 +334,7 @@ def KNNFemiHeatmapPlot(modelID = 11,epoch = 40,epsilon=10,FEMIType="Polar",resol
 #        for t in types:
 #            KNNFemiHeatmapPlot(modelID = m,epoch = 40,epsilon=e,FEMIType=t,resolution=4)
 
-def graphicEvaluation(modelID = 11,epoch = 40,
+def matrixEvaluation(modelID = 11,epoch = 40,
                                 alphas = [0.05,0.1,0.2,0.25,0.5],
                                 epsilons=[2,3,4,5,10],
                                 FEMIType="Polar"):
@@ -388,4 +389,56 @@ def graphicEvaluation(modelID = 11,epoch = 40,
     
     plotMatrix(KNNDCER,KNNBetterRandom,alphas,epsilons,cmap=plt.cm.Wistia,title="Classifiers DCER")
     plotMatrix(KNNdist,KNNBetterRandom,alphas,epsilons,cmap=plt.cm.cool,title="Average distance between prediction real value")
-graphicEvaluation()
+
+
+def EpsilonVSRandomPlot(modelID = 11,epoch = 40,FEMIType="Polar"):
+
+    figFolder = "TestPlots/KNNMatrixPlots/" 
+
+    alphas = np.linspace(0,0.5,20)
+    epsilons = epsilons=[2,4,10,15,30,100,200,10000,1000000]
+    
+    data = loadCSV(modelID,epoch)
+
+    stdev = data[P].std()
+
+    cloud = pointCloudFromDF(data,FEMIType)
+    
+    fig,ax = plt.subplots()
+
+    #Random Baseline
+    randDCER = [0]*len(alphas)
+
+    for i,a in enumerate(alphas):
+        randDCER[i] =getRandomEstimatorDCER(data,a)
+    
+    ax.plot(alphas,randDCER,linestyle = "dashed",color="gray",label = "Random Guessing")
+    ax.plot([stdev,stdev],[0,1],linestyle = "dashed",color = "black",label="St.d. of AUC")
+    
+    #The KNN-Classifier for diffrent Epsilons
+    
+    for e in epsilons:
+
+        KNNCER = 0
+        KNNDCER = [0]*len(alphas)
+        KNNDER = [0]*len(alphas)
+        
+        for i,a in enumerate(alphas):
+            KNNDCER[i],KNNCER,KNNDER[i],merr,stderr,dist,disterr = KNNEvaluation(e,a,cloud)
+        
+        lines = ax.plot(alphas,KNNDCER,label = "KNN for Epsilon = "+str(e))
+        ax.plot([alphas[0],alphas[-1]],[KNNCER,KNNCER],linestyle="dashed",color=lines[0].get_color())
+        ax.plot(alphas,KNNDER,linestyle=":",color=lines[0].get_color())
+
+    ax.set_xlabel("Alpha")
+    ax.set_ylabel("DCER , DER")
+    ax.set_title("Random Guessing- VS KNN- Classifier")
+    plt.legend()
+    plt.show()
+
+#smallParameterEvaluation()
+EpsilonVSRandomPlot()
+
+
+
+
