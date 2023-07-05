@@ -1,6 +1,6 @@
 # Fourier Entropy Mutual Information (FEMI)-Index
 
-Todo: Banner Hier.
+![](.mdpictures/Banner.png)
 
 ## About This Repostory and Basic Overview:
 
@@ -58,7 +58,13 @@ To Plot AUC-Score form benchmark results and FEMI-Index Calculation:
 
 
 To create Plots and Baselines for the noise evaluation
-</pre></code>
+<pre><code>
 ./conductExperiment.sh Noise.py
 </pre></code>
 ## Shameless Plug
+If You liked this repository, You might also like our benchmark repository. A huge part of the infrastructure used here is defined in there. It may also help You in Your next work:<br>
+
+![](.mdpictures/BannerAnoBech.png)
+<center>
+https://github.com/Arn-BAuA/TimeSeriesAEBenchmarkSuite
+</center>
