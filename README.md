@@ -16,8 +16,9 @@ To fulfill these needs, concepts of information theory are used. The index requi
 The entropy of the normal data is computed. By this, we are asking: "How much information is there to be learned to characterize the normal state."<br>
 Than, the mutual information between the normal data and the data containing anomalies is created, asking: "How much informaion separates normal and abnormal states?".<br>
 Since dooing these operations on the time domain samples would ignore the time series nature of the FEMI-index, the fourier transform of normal and abnormal data is taken and the fourier transformed data is used for the experimnts.<br>
+The calculation is depicted in the following flowchart:<br>
 
-Todo: Some Figures here.
+![](.mdpictures/Calculation.png)
 
 ## Contents of this repository
 
@@ -42,8 +43,9 @@ This experiments associates the AUC-Scores from the ModelComparisonBenchmark.py 
 #### Experimetns/FEMI-Evaluation.py and Experiments/NoiseOld.py
 These are some of the first experiments which will eventually be deleted, since the things they do are also archivable using newer Experiments, that implement the "ExperimentClass" interface.
 ###The NN-Classifier:
-To investigate the performance of the FEMI-Index, a NN-Classifier that uses the index for model performance estimation has been developed. That classifier is compared against two baselines. The classifier, the baselines and all the experiments and plots for these are in "KNNExperiment.py". Eventually this will be refactored, to be more modular and fit the interfaces.
-
+To investigate the performance of the FEMI-Index, a NN-Classifier that uses the index for model performance estimation has been developed. That classifier is compared against two baselines. The classifier, the baselines and all the experiments and plots for these are in "KNNExperiment.py". Eventually this will be refactored, to be more modular and fit the interfaces.<br>
+Some plots of the FEMI-index and the properties of the NN-Classifier can be seen in this picture:<br>
+![](.mdpictures/Plots.png)
 ## How to run the experiments
 Since scoping in python and imports work the way they do, we decided to write some little helper scripts.
 the conductExperiment.sh file is used to conduct an experiment that is stored in Experiments/\*. All that it does is copy the experiment to the root dir of the repo, run it in an interpreter and than delete the copy. This is done, so that no problems with the imports ariase when coding here. ALso meaning, that, when writing on a experiment file, all imports are specified from the root dir.
@@ -64,7 +66,7 @@ To create Plots and Baselines for the noise evaluation
 ## Shameless Plug
 If You liked this repository, You might also like our benchmark repository. A huge part of the infrastructure used here is defined in there. It may also help You in Your next work:<br>
 
-![](.mdpictures/BannerAnoBech.png)
+![](.mdpictures/BannerAnoBench.png)
 <center>
 https://github.com/Arn-BAuA/TimeSeriesAEBenchmarkSuite
 </center>
