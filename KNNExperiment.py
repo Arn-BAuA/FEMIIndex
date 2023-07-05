@@ -436,9 +436,290 @@ def EpsilonVSRandomPlot(modelID = 11,epoch = 40,FEMIType="Polar"):
     plt.legend()
     plt.show()
 
-#smallParameterEvaluation()
-EpsilonVSRandomPlot()
 
 
 
+def KNNMSE(epsilon,pointCloud,d = euclidicD,w = sphericalWeight):
 
+    
+    realPDistribution = np.zeros(len(pointCloud))
+    dRealPDistribution = np.zeros(len(pointCloud))
+    predPDistribution = np.zeros(len(pointCloud))
+    dPredPDistribution = np.zeros(len(pointCloud))
+    Errors = np.zeros(len(pointCloud))
+    
+
+    for i in range(0,len(pointCloud)):
+
+        point = pointCloud[i]
+        remainingCloud = pointCloud[:i]+pointCloud[i+1:]
+        
+        E,dE = point.getE()
+        MI,dMI = point.getMI()
+        
+        Preal = point.getValue(P)
+        dPreal = point.getValue(dP)
+        
+        Ppred,dPpred = KNNPerformanceEstimate(E,MI,epsilon,remainingCloud,d,w)
+       
+        realPDistribution[i] = Preal
+        dRealPDistribution[i] = dPreal
+        predPDistribution[i] = Ppred
+        dPredPDistribution[i] = dPpred
+        Errors[i] = np.abs(Ppred-Preal)
+
+    sErrors = np.power(Errors,2)
+    MSE = sErrors.mean()
+    
+    sumUncertainty = dRealPDistribution+dPredPDistribution
+    uncCont = sErrors*np.power(sumUncertainty,2)
+    dMSE = 2*np.sqrt(uncCont.mean())
+
+    return realPDistribution,predPDistribution,MSE,dMSE
+
+def randomMSE(data):
+    singleMSE = np.power(data[P],2)-data[P] + (1/3)
+    dSingleMSE = np.power((2*data[P]-1)*data[dP],2)
+    return singleMSE.mean(),np.sqrt(dSingleMSE.mean())
+
+def evaluateKNNMSE(modelID=11,epoch=40,FEMIType="Polar"):
+    data = loadCSV(modelID,epoch)
+    cloud = pointCloudFromDF(data,FEMIType)
+    
+    figFolder = "TestPlots/KNNBoxplots/"
+    resultFolder = "TestResults/MSE/"
+
+    mean =  data[P].mean()
+    meanPredErr = np.array((data[P]-mean))
+    meanMSE = np.power(meanPredErr,2).mean()
+    
+    epsilons = [1,1.5,2,3,5,10,100]
+
+    fig,ax = plt.subplots()
+    
+    Labels = []
+    results = []
+
+    csvFile = open(resultFolder+FEMIType+" Model "+str(modelID)+" Epochs "+str(epoch)+"MSE.csv",'w')
+    csvFile.write("Classifier\tMSE\n")
+    csvFile.write("Mean MSE\t"+str(meanMSE)+"\n")
+    csvFile.write("Random MSE\t"+str(randomMSE(data))+"\n")
+    
+    for i,e in enumerate(epsilons):
+        #real DIstribution, predicted DIstribution
+        rD,pD,MSE = KNNMSE(e,cloud)
+        
+        csvFile.write("KNN with R = "+str(e)+"\t"+str(MSE)+"\n")
+
+        if i==0:
+            results.append(rD)
+            Labels.append("Real")
+        results.append(pD)
+        Labels.append("R = "+str(e))
+            
+    csvFile.close()
+
+    ax.boxplot(results)
+    ax.set_xticklabels(Labels)
+    ax.set_ylabel("Distribution of AUC")
+    ax.set_title("Distribution of MSE for diffrent R")
+    fig.tight_layout()
+    plt.savefig(figFolder+FEMIType+" Model "+str(modelID)+" Epochs "+str(epoch)+" Boxplot.pdf") 
+    plt.close()
+
+
+#models = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+#Epochs = [0,20,40]
+
+#for m in models:
+#    for e in Epochs:
+#        for t in ["Polar","Component"]:
+#            evaluateKNNMSE(m,e,t)
+
+def createLaTeXTable(tname,models = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14], epsilons = [1,1.5,2,3,5,10,100], epoch = 40):
+    
+    roundDigits =3
+
+    resultDict = {}
+
+    for model in models:
+
+        data = loadCSV(model,epoch)
+        
+        meanAUC =  data[P].mean()
+        meanPredErr = np.array((data[P]-meanAUC))
+        meanMSE = np.power(meanPredErr,2).mean()
+        dMeanMSE = 2*np.sqrt((np.power(meanPredErr*data[dP],2)).mean())
+
+        rMSE,dRMSE = randomMSE(data)
+
+        modelResults = {"MeanAUC":np.round(meanAUC,roundDigits),
+                        "Random":[np.round(rMSE,roundDigits),np.round(dRMSE,roundDigits)],
+                        "MeanCErr":[np.round(meanMSE,roundDigits),np.round(dMeanMSE,roundDigits)]
+                        }
+        
+        bestErr = 1
+        dBestErr = 0
+        pathToBestErr = []
+
+        toMarkBold = []
+
+        if meanMSE < bestErr:
+            bestErr = meanMSE
+            dBestErr = dMeanMSE
+            pathToBestErr = ["MeanCErr"]
+        if rMSE < bestErr:
+            bestErr = rMSE
+            dBestErr = dMSE
+            pathToBestErr = ["Random"]
+
+        NNResults = {}
+
+        for FEMIType in ["Polar","Component"]:
+            cloud = pointCloudFromDF(data,FEMIType)
+            
+            NNResults[FEMIType] = {}
+            
+            for e in epsilons:
+                rD,pD,MSE,dMSE = KNNMSE(e,cloud)
+                
+                NNResults[FEMIType][e] = [np.round(MSE,roundDigits),np.round(dMSE,roundDigits)]
+
+                if MSE < bestErr:
+                    bestErr = MSE
+                    pathToBestErr = ["NNResults",FEMIType,e]
+        
+        toMarkBold.append(pathToBestErr)
+        
+        def isInErrorInterval(x,dx,y,dy):
+            if(x < y):
+                return x+dx > y-dy
+            else:
+                return y+dy > x-dx
+
+        for FEMIType in ["Polar","Component"]:
+            for e in epsilons:
+                
+                err,dErr = NNResults[FEMIType][e][0],NNResults[FEMIType][e][1]
+                if isInErrorInterval(err,dErr,bestErr,dBestErr):
+                    toMarkBold.append(["NNResults",FEMIType,e])
+
+        if(isInErrorInterval(rMSE,dRMSE,bestErr,dBestErr)):
+            toMarkBold.append(["Random"])
+        if(isInErrorInterval(meanMSE,dMeanMSE,bestErr,dBestErr)):
+            toMarkBold.append(["MeanCErr"])
+        
+
+        modelResults["NNResults"] = NNResults
+        modelResults["pathToBestErr"] = pathToBestErr
+        modelResults["MarkBold"] = toMarkBold
+        resultDict[model] = modelResults
+
+    resultFolder = "TestResults/"
+
+    texFile = open(resultFolder+tname+".tex",'w')
+
+    texFile.write("\\begin{tabular}{r"+"|c"*(2*len(models))+"|}\n")
+    
+    def getEntry(model,path):
+ 
+        pointer = resultDict[model]
+            
+        #going down the dict
+        for key in path:
+            pointer = pointer[key]
+        return pointer
+    
+    def shouldBeMarkedBold(path):
+        for p in resultDict[model]["MarkBold"]:
+            if path == p:
+                return True
+        return False
+   
+   #fills digits after floating point
+    def convertAndFill(value,numPositions = 3):
+        value = str(value)
+        while(len(value) < numPositions+2):
+            value += "0"
+        return value
+
+    def writeBroadLine(lineName,errorKey):
+        line = lineName+" & "
+        path = [errorKey]
+
+        for model in models:
+            
+            entry = getEntry(model,path)
+            value = convertAndFill(entry[0])+" $\\pm$ "+convertAndFill(entry[1])
+
+            if shouldBeMarkedBold(path):
+                line += "\\multicolumn{2}{|c|}{\\bf{"+value+"}} "
+            else:
+                line += "\\multicolumn{2}{|c|}{"+value+"} "
+            
+            if not model == models[-1]:
+                line += "& "
+        
+        line += " \\\\\n"
+        texFile.write(line)
+
+    def writeNormalLine(r):
+        line = "R = "+str(r)+" & "
+        
+        for model in models:
+            for FEMIType in ["Polar","Component"]:
+                path = ["NNResults",FEMIType,r]
+                entry = getEntry(model,path)
+                value = convertAndFill(entry[0])+" $\\pm$ "+convertAndFill(entry[1])
+                
+                if shouldBeMarkedBold(path):
+                    line += "\\bf{"+value+"} "
+                else:
+                    line += value+" "
+                if not (model == models[-1] and  FEMIType == "Component"):
+                    line += "& "
+
+        line += " \\\\\n"
+        texFile.write(line)
+    
+    headline = "Error/Model ID & "
+
+    for model in models:
+        headline += "\multicolumn{2}{|c|}{"+str(model)+"} "
+        if not model == models[-1]:
+            headline += "& "
+    headline += "\\\\\n"
+
+    texFile.write(headline)
+    texFile.write("\\hline ")
+
+    writeBroadLine("Random C. MSE","Random")
+    writeBroadLine("Avg. C. MSE","MeanCErr")
+    
+    texFile.write("\\hline ")
+    texFile.write("NN-C. MSE & "+" P: & C: & "*(len(models)-1)+" P: & C: \\\\\n")
+    texFile.write("\\hline ")
+
+    for r in epsilons:
+        writeNormalLine(r)
+
+    texFile.write("\\end{tabular}")
+    texFile.close()    
+
+            
+
+#createLaTeXTable("MSETable")
+#createLaTeXTable("MSE1",[0,1,2,3,4,5])
+#createLaTeXTable("MSE2",[6,7,8,9,10,11])
+#createLaTeXTable("MSE3",[12,13,14])
+createLaTeXTable("MSE1_1",[0,1,2,3,4])
+createLaTeXTable("MSE2_1",[5,6,7,8,9])
+createLaTeXTable("MSE3_1",[10,11,12,13,14])
+#createLaTeXTable("MSE1_2",[0,1,2])
+#createLaTeXTable("MSE2_2",[3,4,5])
+#createLaTeXTable("MSE3_2",[6,7,8])
+#createLaTeXTable("MSE4_2",[9,10,11])
+#createLaTeXTable("MSE5_2",[12,13,14])
+createLaTeXTable("MSEResults",[3,10])
+createLaTeXTable("MSEResultsRNN",[4,5])
+createLaTeXTable("MSEResultsTransformer",[13,14])

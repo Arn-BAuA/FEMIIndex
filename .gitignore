@@ -5,6 +5,7 @@ Results
 TestResults
 Plots
 TestPlots
+*.zip
 *.swp
 HugeBenchmarkResults
 oldResults
