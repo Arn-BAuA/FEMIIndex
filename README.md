@@ -4,11 +4,14 @@
 
 ## About This Repostory and Basic Overview:
 
+**This repository contains experiments for a paper that is currently beeing reviewd.**
 This repository contains the code to compute the FEMI-index along side experiment code for its validation. The FEMI-Index
 is a way to mathematically assign and index to a time series data set. Ideally, this index gives a hint how 
 difficult the calssification of the anomalies contained in the data set is for a given anomaly detection algorithm. <br>
 this repository is structured as follow:
-
+* A short introduction to FEMI-index is given.
+* The contents of this Repository (Files and what they contain) are listed.
+* How to use this repository is introduced. Including an installation guide and a step by step guide to reproduce the results that are featured in the paper.
 
 If You are intrested in reporducing the results of out paper on this code, that is currently beeing reviewed, there is a step by step guide at the end.
 
